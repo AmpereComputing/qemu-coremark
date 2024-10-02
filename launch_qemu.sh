@@ -14,7 +14,7 @@ sleep 5
 if [ ! -f "disk.qcow2" ]; then
   echo "Downloading Debian 'genericcloud' arm64 image"
   wget -c -O debian-12-genericcloud-arm64-20240901-1857.qcow2 https://cloud.debian.org/images/cloud/bookworm/20240901-1857/debian-12-genericcloud-arm64-20240901-1857.qcow2
-  qemu-img resize -q debian-12-genericcloud-arm64-20240901-1857.qcow2 5G
+  ./qemu-9.1.0/build/qemu-img resize -q debian-12-genericcloud-arm64-20240901-1857.qcow2 5G
 fi
 
 if [ "$(uname -m)" = "aarch64" ]; then
@@ -33,7 +33,7 @@ count=0
 portnum=2000
 while read line; do
   if [ ! -f "disk${count}.qemu" ]; then
-    qemu-img create -q -f qcow2 -F qcow2 -b debian-12-genericcloud-arm64-20240901-1857.qcow2 disk${count}.qcow2
+    ./qemu-9.1.0/build/qemu-img create -q -f qcow2 -F qcow2 -b debian-12-genericcloud-arm64-20240901-1857.qcow2 disk${count}.qcow2
   fi
 
   echo "Starting QEMU-${count}"
