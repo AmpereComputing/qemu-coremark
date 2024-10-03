@@ -17,7 +17,7 @@ count=0
 
 SSH_KEY_FILE="id_rsa_coremark_qemu"
 
-echo "${num_inst} QEMU running in parallel !"
+echo "${num_inst} instances of pts/coremark running in parallel in arm64 VMs!"
 while true; do
 
   rm -f /tmp/20*

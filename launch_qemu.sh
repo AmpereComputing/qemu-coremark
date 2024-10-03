@@ -25,18 +25,17 @@ else
   QEMU_EXTRA_FLAGS=""
 fi
 
-echo "Running QEMU"
+echo -n "Running QEMU VMs"
 
 bash ./thread.sh
 
 count=0
 portnum=2000
+qemu_pids=()
 while read line; do
   if [ ! -f "disk${count}.qemu" ]; then
     ./qemu-9.1.0/build/qemu-img create -q -f qcow2 -F qcow2 -b debian-12-genericcloud-arm64-20240901-1857.qcow2 disk${count}.qcow2
   fi
-
-  echo "Starting QEMU-${count}"
 
   nohup taskset -c ${line} \
     $PWD/qemu-9.1.0/build/qemu-system-aarch64 \
@@ -54,9 +53,41 @@ while read line; do
       -drive if=pflash,format=raw,file=efi-vars.img              \
       ${QEMU_EXTRA_FLAGS} -display none > /tmp/qemu${count}.log 2>&1 &
 
+  echo -n "."
+  qemu_pids+=($!)
+
   count=$((count+1))
   portnum=$((portnum+1))
 done < core_spread.txt
+echo ""
 
-sleep 120
+# Give the last QEMU VM some time to start running
+sleep 5
+
+echo "Checking if VMs successfully started."
+count=0
+for p in "${qemu_pids[@]}"; do
+  if ! kill -0 $p 2>/dev/null; then
+    #wait $!
+    echo "QEMU VM ${count} failed to start. See /tmp/qemu${count}.log for details."
+    exit 1
+  fi
+  count=$((count+1))
+done
+
+echo "Waiting for VMs to finish booting and installing pts/coremark."
+count=0
+while read line; do
+  if ! grep -q 'Cloud-init target.' "/tmp/qemu-serial-${count}.log"; then
+    echo "Waiting for VM ${count} (check /tmp/qemu-serial-${count}.log for progress)"
+    while ! grep -q 'Cloud-init target.' "/tmp/qemu-serial-${count}.log"; do
+      sleep 2
+      echo -n "."
+    done
+    echo ""
+  fi
+  count=$((count+1))
+done < core_spread.txt
+
+
 echo "The QEMU VMs are ready."
