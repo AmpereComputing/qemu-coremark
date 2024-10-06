@@ -40,17 +40,18 @@ It should run on other distros and architectures (POWER, RISCV64, LOONGSON etc.)
 ## Run
 
 Run PTS / coremark on each instance.
-Argument 1 is the number of times you want to run Coremark on each QEMU.
+Argument 1 is the number of times you want to run CoreMark on each QEMU.
 Default Value is 1
 
 ```
 ./run_pts.sh <count>
 ```
-Example - It will report the output as follow -
+Example - it will report the output as follow -
 ```
-	$ ./run_pts_once.sh 2
-	23 QEMU running in parallel. Total CoreMark Score is: 1937195
-	23 QEMU running in parallel. Total CoreMark Score is: 1940554
+	$ ./run_pts.sh 2
+    23 instances of pts/coremark running in parallel in arm64 VMs!
+	Round 1 - Total CoreMark Score is: 1937195
+	Round 2 - Total CoreMark Score is: 1940554
 ```
 ## Teardown
 To stop / kill QEMU instances

@@ -7,14 +7,17 @@
 set -o errexit
 set -o nounset
 
-bash stop_qemu.sh
-sleep 5
+. env.sh
+
+if [ -f "qemu_pids.txt" ]; then
+  ./stop_qemu.sh
+fi
 
 # Download img file (debian genericcloud arm64) to load into QEMU
 if [ ! -f "disk.qcow2" ]; then
   echo "Downloading Debian 'genericcloud' arm64 image"
-  wget -c -O debian-12-genericcloud-arm64-20240901-1857.qcow2 https://cloud.debian.org/images/cloud/bookworm/20240901-1857/debian-12-genericcloud-arm64-20240901-1857.qcow2
-  ./qemu-9.1.0/build/qemu-img resize -q debian-12-genericcloud-arm64-20240901-1857.qcow2 5G
+  wget -c -O "${DEBIAN_FILENAME}" "https://cloud.debian.org/images/cloud/bookworm/20240901-1857/${DEBIAN_FILENAME}"
+  "./qemu-${QEMU_VERSION}/build/qemu-img" resize -q "${DEBIAN_FILENAME}" 5G
 fi
 
 if [ "$(uname -m)" = "aarch64" ]; then
@@ -27,18 +30,23 @@ fi
 
 echo -n "Running QEMU VMs"
 
-bash ./thread.sh
+./thread.sh
 
 count=0
 portnum=2000
 qemu_pids=()
 while read line; do
-  if [ ! -f "disk${count}.qemu" ]; then
-    ./qemu-9.1.0/build/qemu-img create -q -f qcow2 -F qcow2 -b debian-12-genericcloud-arm64-20240901-1857.qcow2 disk${count}.qcow2
+  if [ ! -f "disk${count}.qcow2" ]; then
+    "./qemu-${QEMU_VERSION}/build/qemu-img" create -q -f qcow2 -F qcow2 -b "${DEBIAN_FILENAME}" "disk${count}.qcow2"
   fi
 
+  if [ ! -f "efi-vars-${count}.img" ]; then
+    truncate -s 64m "efi-vars-${count}.img"
+  fi
+
+  # shellcheck disable=SC2086
   nohup taskset -c ${line} \
-    $PWD/qemu-9.1.0/build/qemu-system-aarch64 \
+    "$PWD/qemu-${QEMU_VERSION}/build/qemu-system-aarch64" \
       -machine virt,gic-version=max        \
       -m 4G                                \
       -cpu ${QEMU_CPU}                     \
@@ -67,8 +75,7 @@ sleep 5
 echo "Checking if VMs successfully started."
 count=0
 for p in "${qemu_pids[@]}"; do
-  if ! kill -0 $p 2>/dev/null; then
-    #wait $!
+  if ! kill -0 "$p" 2>/dev/null; then
     echo "QEMU VM ${count} failed to start. See /tmp/qemu${count}.log for details."
     exit 1
   fi
@@ -89,5 +96,6 @@ while read line; do
   count=$((count+1))
 done < core_spread.txt
 
+echo "${qemu_pids[@]}" > "qemu_pids.txt"
 
 echo "The QEMU VMs are ready."

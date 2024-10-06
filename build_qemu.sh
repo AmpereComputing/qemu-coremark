@@ -4,16 +4,17 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-
 # Runs coremark in an arm64 QEMU VM
-# Version 20241002-01
+# Version 20241005-01
 
 set -o errexit
 set -o nounset
 
+. env.sh
+
 echo "Checking for prerequisites"
 
-DISTRO_LIKE="$(cat /etc/os-release | grep ID_LIKE | awk -F '=' '{print $2}')"
+DISTRO_LIKE="$(grep ID_LIKE /etc/os-release | awk -F '=' '{print $2}')"
 
 if [ "${DISTRO_LIKE}" = "debian" ]; then
   QEMU_AARCH64_FW="/usr/share/qemu-efi-aarch64/QEMU_EFI.fd"
@@ -61,8 +62,6 @@ if [ "${DISTRO_LIKE}" = "debian" ]; then
     echo "Instaling bzip2"
     sudo apt-get install -y bzip2
   fi
-
-
 elif [ ! "$(command -v ninja)" ] || [ ! "$(command -v gcc)" ] || [ ! "$(command -v g++)" ] || [ ! "$(command -v git)" ] ||
      [ ! "$(command -v make)" ] || [ ! "$(command -v wget)" ] || [ ! "$(command -v  cloud-localds)" ] ||
      [ ! "$(command -v bzip2)" ]; then
@@ -82,7 +81,7 @@ fi
 echo "Downloading Phoronix Test Suite"
 mkdir phoronix-test-suite || true
 pushd phoronix-test-suite || exit 1
-wget -c -O phoronix-test-suite_10.8.4_all.deb https://phoronix-test-suite.com/releases/repo/pts.debian/files/phoronix-test-suite_10.8.4_all.deb
+wget -c -O "phoronix-test-suite_${PTS_VERSION}_all.deb" "https://phoronix-test-suite.com/releases/repo/pts.debian/files/phoronix-test-suite_${PTS_VERSION}_all.deb"
 cat >phoronix-test-suite.xml <<EOF
 <?xml version="1.0"?>
 <!--Phoronix Test Suite v10.8.4-->
@@ -170,13 +169,13 @@ EOF
 popd || exit 1
 
 # Build QEMU
-echo "8d2f4cfe25af01c73526ea0d5059fcae  qemu-9.1.0.tar.gz" > MD5SUM
+echo "${QEMU_MD5} qemu-${QEMU_VERSION}.tar.gz" > MD5SUM
 if ! md5sum -c MD5SUM; then
   echo "Downloading QEMU"
-  wget -c -O qemu-9.1.0.tar.gz https://github.com/qemu/qemu/archive/refs/tags/v9.1.0.tar.gz
+  wget -c -O qemu-${QEMU_VERSION}.tar.gz https://github.com/qemu/qemu/archive/refs/tags/v${QEMU_VERSION}.tar.gz
 fi
-tar xf qemu-9.1.0.tar.gz
-pushd qemu-9.1.0 || exit 1
+tar xf qemu-${QEMU_VERSION}.tar.gz
+pushd qemu-${QEMU_VERSION} || exit 1
 if [ ! -e "build/qemu-system-aarch64" ]; then
   echo "Building QEMU"
   ./configure --target-list=aarch64-softmmu --enable-slirp --enable-kvm
@@ -189,7 +188,6 @@ echo "Setting up VM configuration"
 cp -vf "${QEMU_AARCH64_FW}" efi-code.img
 
 truncate -s 64m efi-code.img
-truncate -s 64m efi-vars.img
 
 SSH_KEY_FILE="id_rsa_coremark_qemu"
 if [ ! -e "${SSH_KEY_FILE}" ]; then
