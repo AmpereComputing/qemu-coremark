@@ -8,55 +8,46 @@ set -o errexit
 set -o nounset
 
 # Assign default value if no argument is passed
-arg=${1:-1}
+num_iterations=${1:-1}
 
 num_inst=$(wc -l core_spread.txt | cut -d" " -f1)
-num_minus_1=$((num_inst-1))
-num_minus_2=$((num_inst-2))
-count=0
 
-SSH_KEY_FILE="id_rsa_coremark_qemu"
+ssh_key_file="id_rsa_coremark_qemu"
 
 echo "${num_inst} instances of pts/coremark running in parallel in arm64 VMs!"
-while true; do
+ssh_pids=()
+# shellcheck disable=SC2034
+for iter in $(seq 1 ${num_iterations}); do
 
   rm -f /tmp/20*
   portnum=2000;
 
-  for i in $(seq 0 ${num_minus_2}); do
+  # shellcheck disable=SC2034
+  for i in $(seq 0 $((num_inst-1))); do
     ssh                           \
       -p ${portnum}               \
-      -i "${SSH_KEY_FILE}"        \
+      -i "${ssh_key_file}"        \
       debian@localhost            \
       -o StrictHostKeyChecking=no \
       "phoronix-test-suite debug-benchmark pts/coremark" >> /tmp/${portnum} 2>&1 &
-    portnum=$((${portnum}+1))
+    ssh_pids+=($!)
+    portnum=$((portnum+1))
   done
 
-  ssh                                  \
-    -p ${portnum}                      \
-    -i ${SSH_KEY_FILE}                 \
-    debian@localhost                   \
-    -o UserKnownHostsFile=/dev/null    \
-    -o StrictHostKeyChecking=no        \
-    "phoronix-test-suite debug-benchmark pts/coremark" >> /tmp/${portnum} 2>&1
+  for pid in "${ssh_pids[@]}"; do
+    wait "${pid}"
+  done
 
-  sleep 10
   sum=0
   portnum=2000;
 
   # Add the coremark scores
-  for i in $(seq 0 ${num_minus_1}); do
+  # shellcheck disable=SC2034
+  for i in $(seq 0 $((num_inst-1))); do
     score=$(cat /tmp/${portnum} | grep "Average: " | cut -d " " -f2 | cut -d"." -f1)
     sum=$((sum+score))
     portnum=$((portnum+1))
   done
 
-  echo "Round ${count} - Total CoreMark Score is: ${sum}"
-
-  count=$((count+1))
-
-  if [ "${count}" -ge "$arg" ]; then
-    exit 0;
-  fi
+  echo "Round ${iter} - Total CoreMark Score is: ${sum}"
 done
