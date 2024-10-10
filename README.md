@@ -22,6 +22,7 @@ used measure of SoC performance especially automotive ECUs.
 * [Run](#run)
 * [Teardown](#teardown)
 * [Dependencies](#dependencies)
+* [Example Results](#example-results)
 
 ## System Requirements
 x86 or arm64 Ubuntu 22.04 or 24.04.
@@ -48,10 +49,10 @@ Default Value is 1
 ```
 Example - it will report the output as follow -
 ```
-	$ ./run_pts.sh 2
+    $ ./run_pts.sh 2
     23 instances of pts/coremark running in parallel in arm64 VMs!
-	Round 1 - Total CoreMark Score is: 1937195
-	Round 2 - Total CoreMark Score is: 1940554
+    Round 1 - Total CoreMark Score is: 1937195
+    Round 2 - Total CoreMark Score is: 1940554
 ```
 ## Teardown
 To stop / kill QEMU instances
@@ -71,3 +72,14 @@ their associated license terms:
 
 `phoronix-test-suite`: [GPLv3](https://github.com/phoronix-test-suite/phoronix-test-suite/blob/master/COPYING)<br />
 `coremark`: [Apache v2](https://github.com/eembc/coremark/blob/main/LICENSE.md)
+
+## Example Results
+
+Relative performance of software testing on virtual and emulated arm SoCs using
+[qemu-coremark](https://github.com/AmpereComputing/qemu-coremark).
+
+| Number of Parallel Instances | Hardware                                                       | CoreMark Result |
+| ---------------------------- | --------                                                       | --------------- |
+| 47                           | arm64 Virtual SoCs on System76 Starling Pro AmpereOne 192 core | 4,640,882       |
+| 31                           | arm64 Virtual SoCs on System76 developer desktop 128 core      | 2,809,762       |
+| 47                           | arm64 Emulated SoCs on AMD Genoa 9654                          | 512,244         |
