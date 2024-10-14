@@ -16,7 +16,7 @@ echo "Checking for prerequisites"
 
 DISTRO_LIKE="$(grep ID_LIKE /etc/os-release | awk -F '=' '{print $2}')"
 
-if [ "${DISTRO_LIKE}" = "debian" ]; then
+if [[ "${DISTRO_LIKE}" =~ "debian" ]]; then
   QEMU_AARCH64_FW="/usr/share/qemu-efi-aarch64/QEMU_EFI.fd"
   if ! command -v ninja; then
     echo "Installing Ninja Build"
@@ -50,16 +50,20 @@ if [ "${DISTRO_LIKE}" = "debian" ]; then
     echo "Installing QEMU AArch64 UEFI firmware"
     sudo apt-get install -y qemu-efi-aarch64
   fi
-  if dpkg -l | grep -q "^ii libglib2.0-dev"; then
-    echo "Instaling libglib2.0-dev"
+  if ! dpkg --no-pager -l libglib2.0-dev >/dev/null 2>&1; then
+    echo "Installing libglib2.0-dev"
     sudo apt-get install -y libglib2.0-dev
   fi
-  if dpkg -l | grep -q "^ii python3-venv"; then
-    echo "Instaling python3-venv"
+  if ! dpkg --no-pager -l python3-venv >/dev/null 2>&1; then
+    echo "Installing python3-venv"
     sudo apt-get install -y python3-venv
   fi
+  if ! dpkg --no-pager -l python3-tomli >/dev/null 2>&1; then
+    echo "Installing python3-tomli"
+    sudo apt-get install -y python3-tomli
+  fi
   if ! command -v bzip2; then
-    echo "Instaling bzip2"
+    echo "Installing bzip2"
     sudo apt-get install -y bzip2
   fi
 elif [ ! "$(command -v ninja)" ] || [ ! "$(command -v gcc)" ] || [ ! "$(command -v g++)" ] || [ ! "$(command -v git)" ] ||
@@ -67,7 +71,7 @@ elif [ ! "$(command -v ninja)" ] || [ ! "$(command -v gcc)" ] || [ ! "$(command 
      [ ! "$(command -v bzip2)" ]; then
   echo "This script only automatically installs required packages on Debian-like distros."
   echo "The following tools are needed:"
-  echo "  ninja gcc g++ make wget git cloud-localds bzip2 libglib2.0-dev python3-venv"
+  echo "  ninja gcc g++ make wget git cloud-localds bzip2 libglib2.0-dev python3-venv python3-tomli"
   echo ""
   echo "  cloud-localds is part of Canonical's cloud-utils package,"
   echo "  which can be found at https://github.com/canonical/cloud-utils/"
@@ -172,10 +176,10 @@ popd || exit 1
 echo "${QEMU_MD5} qemu-${QEMU_VERSION}.tar.gz" > MD5SUM
 if ! md5sum -c MD5SUM; then
   echo "Downloading QEMU"
-  wget -c -O qemu-${QEMU_VERSION}.tar.gz https://github.com/qemu/qemu/archive/refs/tags/v${QEMU_VERSION}.tar.gz
+  wget -c -O "qemu-${QEMU_VERSION}.tar.gz" "https://github.com/qemu/qemu/archive/refs/tags/v${QEMU_VERSION}.tar.gz"
 fi
-tar xf qemu-${QEMU_VERSION}.tar.gz
-pushd qemu-${QEMU_VERSION} || exit 1
+tar xf "qemu-${QEMU_VERSION}.tar.gz"
+pushd "qemu-${QEMU_VERSION}" || exit 1
 if [ ! -e "build/qemu-system-aarch64" ]; then
   echo "Building QEMU"
   ./configure --target-list=aarch64-softmmu --enable-slirp --enable-kvm

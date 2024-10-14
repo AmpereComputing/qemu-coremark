@@ -58,7 +58,7 @@ while read line; do
       -drive file=fat:rw:phoronix-test-suite                     \
       -chardev file,id=char0,path=/tmp/qemu-serial-${count}.log,signal=off -serial chardev:char0 \
       -drive if=pflash,format=raw,file=efi-code.img,readonly=on  \
-      -drive if=pflash,format=raw,file=efi-vars.img              \
+      -drive if=pflash,format=raw,file=efi-vars-${count}.img     \
       ${QEMU_EXTRA_FLAGS} -display none > /tmp/qemu${count}.log 2>&1 &
 
   echo -n "."
