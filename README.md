@@ -81,5 +81,5 @@ Relative performance of software testing on virtual and emulated arm SoCs using
 | Number of Parallel Instances | Hardware                                                                     | CoreMark Result |
 | ---------------------------- | --------                                                                     | --------------- |
 | 47                           | arm64 Virtual SoCs on System76 Starling Pro AmpereOne 192 core               | 4,640,882       |
-| 31                           | arm64 Virtual SoCs on System76 Thelio Astra arm64 developer desktop 128 core | 2,809,762       |
+| 31                           | arm64 Virtual SoCs on System76 Thelio Astra arm64 developer desktop 128 core | 2,693,758       |
 | 47                           | arm64 Emulated SoCs on AMD EPYC Genoa 9654                                   | 512,244         |
