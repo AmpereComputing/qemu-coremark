@@ -50,15 +50,15 @@ if [[ "${DISTRO_LIKE}" =~ "debian" ]]; then
     echo "Installing QEMU AArch64 UEFI firmware"
     sudo apt-get install -y qemu-efi-aarch64
   fi
-  if ! dpkg --no-pager -l libglib2.0-dev >/dev/null 2>&1; then
+  if ! dpkg --no-pager -s libglib2.0-dev >/dev/null 2>&1; then
     echo "Installing libglib2.0-dev"
     sudo apt-get install -y libglib2.0-dev
   fi
-  if ! dpkg --no-pager -l python3-venv >/dev/null 2>&1; then
+  if ! dpkg --no-pager -s python3-venv >/dev/null 2>&1; then
     echo "Installing python3-venv"
     sudo apt-get install -y python3-venv
   fi
-  if ! dpkg --no-pager -l python3-tomli >/dev/null 2>&1; then
+  if ! dpkg --no-pager -s python3-tomli >/dev/null 2>&1; then
     echo "Installing python3-tomli"
     sudo apt-get install -y python3-tomli
   fi
