@@ -30,6 +30,29 @@ x86 or arm64 Ubuntu 22.04 or 24.04.
 It should run on other distros and architectures (POWER, RISCV64, LOONGSON etc.) but we've not tested those.
 
 ## Setup
+
+### Check user access to /dev/kvm
+
+In these examples, `$` represents the command prompt.
+Check the group permissions for /dev/kvm :
+```
+$ ls -l /dev/kvm
+crw-rw----+ 1 root kvm 10, 232 Nov 25 17:11 /dev/kvm
+```
+Check if your user is in the group:
+```
+$ groups
+system76 adm cdrom sudo dip plugdev users lpadmin
+```
+If not, update the user. e.g.:
+```
+$ sudo usermod -a -G kvm $USER
+```
+To apply the changes, either logout and login again, or run:
+```
+$ newgrp kvm
+```
+
 ### Build QEMU
 ```
 ./build_qemu.sh
